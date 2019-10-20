@@ -26,8 +26,9 @@ else:
     slack = Slacker(api_key)
 
 # Get channel id from name
-response = slack.channels.list()
+response = slack.conversations.list(exclude_archived=True, limit=1000, types=['private_channel', 'public_channel'])
 channels = [d for d in response.body['channels'] if d['name'] == channel_name]
+
 if not len(channels):
     print("Cannot find channel")
     sys.exit(1)
@@ -51,7 +52,7 @@ print("***** INVITATION OF {} MEMBERS IN PROGRESS TO CHANNEL : {} *****".format(
 for user_id, user_display_name, user_name in users:
     print("Inviting [ID: %s] %s (aka %s)" % (user_id, user_display_name, user_name))
     try:
-        slack.channels.invite(channel_id, user_id)
+        slack.conversations.invite(channel_id, user_id)
         print("\t --> OK")
     except Error as e:
         code = e.args[0]
