@@ -36,13 +36,20 @@ channel_id = channels[0]['id']
 
 # Get users list
 response = slack.users.list()
-users = [(u['id'], u['name'], u['profile']['real_name']) for u in response.body['members'] if u['is_bot'] == False and u['deleted'] == False]
+
+users = [
+    (u['id'], u['profile']['display_name'], u['name']) for u in response.body['members']
+        if u['is_bot'] == False
+        and u['deleted'] == False
+        and u['is_ultra_restricted'] == False
+        and u['is_restricted'] == False
+]
 
 # Invite all users to slack channel
 print("***** INVITATION OF {} MEMBERS IN PROGRESS TO CHANNEL : {} *****".format(len(users), channel_name))
 
-for user_id, user_name, user_full_name in users:
-    print("Inviting [ID: %s] %s (aka %s)" % (user_id, user_full_name, user_name))
+for user_id, user_display_name, user_name in users:
+    print("Inviting [ID: %s] %s (aka %s)" % (user_id, user_display_name, user_name))
     try:
         slack.channels.invite(channel_id, user_id)
         print("\t --> OK")
@@ -50,7 +57,7 @@ for user_id, user_name, user_full_name in users:
         code = e.args[0]
         if code == "already_in_channel":
             print("{} is already in the channel".format(user_name))
-        elif code in ('cant_invite_self', 'cant_invite', 'user_is_ultra_restricted'):
+        elif code in ('cant_invite_self', 'cant_invite'):
             print("Skipping user {} ('{}')".format(user_name, code))
         else:
             raise
