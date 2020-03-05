@@ -30,7 +30,7 @@ response = slack.conversations.list(exclude_archived=True, limit=1000, types=['p
 channels = [d for d in response.body['channels'] if d['name'] == channel_name]
 
 if not len(channels):
-    print("Cannot find channel")
+    print("Cannot find channel") # Channel can be not found if the workspace has more than 1000 channel (conversations.list sends up to 1000 channel)
     sys.exit(1)
 assert len(channels) == 1
 channel_id = channels[0]['id']
@@ -52,8 +52,9 @@ print("***** INVITATION OF {} MEMBERS IN PROGRESS TO CHANNEL : {} *****".format(
 for user_id, user_display_name, user_name in users:
     print("Inviting [ID: %s] %s (aka %s)" % (user_id, user_display_name, user_name))
     try:
-        slack.conversations.invite(channel_id, user_id)
-        print("\t --> OK")
+        if user_id != 'ID_USER': # Exclude a person
+            slack.conversations.invite(channel_id, user_id)
+            print("\t --> OK")
     except Error as e:
         code = e.args[0]
         if code == "already_in_channel":
